@@ -40,11 +40,11 @@ function build_table(metadata_obj) {
     d3.select("#sample-metadata").html("")
 
     //create new table 
-    let table = d3.select("#sample-metadata").append("table")
-
+    let table = d3.select("#sample-metadata").append("table").attr("class", "table table-striped table-hover table-sm")
+    let tbody = table.append("tbody")
     //loop through metadata object, and add all key-value pairs to table
     Object.entries(metadata_obj).forEach((k) => {
-        let trow = table.append("tr");
+        let trow = tbody.append("tr");
         trow.append("th").text(k[0]);
         trow.append("td").text(k[1]);
     });
