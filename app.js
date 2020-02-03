@@ -225,8 +225,8 @@ function build_gaugechart(metadata_obj, washes) {
     }];
 
     var layout = {
-        width: 600,
-        height: 450,
+        width: 800,
+        height: 650,
         margin: {
             t: 0,
             b: 0
