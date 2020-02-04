@@ -1,46 +1,50 @@
-// This function rounds numbers to values in .5 increments
-function roundToHalf(num) {
-    return Math.round(num * 2) / 2;
+// ******** RUN THESE ON PAGE LOAD ************
+
+// select testID subject control on page
+dataset_selection_control = d3.select("#selDataset");
+
+load_subjects();
+update_page();
+
+// listen for change test subject change, and then run update_page when a change occurs 
+dataset_selection_control.on("change", update_page);
+
+// ******** The following functions pull data from the csv and bind it to the page
+
+function load_subjects() {
+    d3.json("data/samples.json").then(data => {
+        // get subject_ids from data
+        const subject_ids = data.names;
+
+        // bind [subject_ids] to #selDataset, get list of all participants in the study, 
+        // and then add each [subject_ids] to dropdown menu
+        dataset_selection_control.selectAll("option")
+            .data(subject_ids)
+            .enter()
+            .append("option")
+            .attr("value", (d) => d)
+            .html((d) => d);
+    });
 }
 
-// default font styles for chart headers
-const font_title_style = {
-    family: 'Arial',
-    size: 14,
-    color: "black"
-}
+function update_page() {
+    d3.json("data/samples.json").then(d => {
+        // get data from json file 
+        const metadata = d.metadata;
+        const samples = d.samples;
 
-d3.json("data/samples.json").then(d => {
-    // get data from json file 
-    const subject_ids = d.names;
-    const metadata = d.metadata;
-    const samples = d.samples;
+        // get all belly button washes from the metadata array. This is used for the gauge chart.
+        const all_washes = metadata.map(m => m.wfreq);
 
-    // get all belly button washes from the metadata array. This is used for the gauge chart.
-    const all_washes = metadata.map(m => m.wfreq);
+        // get the average of all belly button washes in the dataset, and round to nearest .5 value. This is used for the gauge chart.
+        const avg_washes = roundToHalfNumber(all_washes.reduce((a, b) => a + b, 0) / all_washes.length);
 
-    // get the average of all belly button washes in the dataset, and round to nearest .5 value. This is used for the gauge chart.
-    const avg_washes = roundToHalf(all_washes.reduce((a, b) => a + b, 0) / all_washes.length);
-
-    // select testID subject control on page
-    dataset_selection_control = d3.select("#selDataset");
-
-    // bind [subject_ids] to #selDataset, get list of all participants in the study, 
-    // and then add each [subject_ids] to dropdown menu
-    dataset_selection_control.selectAll("option")
-        .data(subject_ids)
-        .enter()
-        .append("option")
-        .attr("value", (d) => d)
-        .html((d) => d);
-
-    // update all the charts when a new test id is selected
-    dataset_selection_control.on("change", function () {
+        // get value of the test subject ID node. 
         let selected_id = dataset_selection_control.node().value;
 
         // in the JSON, selected_id is stored as an int, so we must parseInt on it for the filter
-        let filtered_metadata = metadata.filter(d => {
-            return d.id === +selected_id;
+        let metadata_selectedID = metadata.filter(m => {
+            return m.id === +selected_id;
         });
 
         // in the JSON, selected_id is stored as a string, so we just pass the string value to the filter.
@@ -48,35 +52,21 @@ d3.json("data/samples.json").then(d => {
             return s.id === selected_id;
         });
 
-        build_table(filtered_metadata[0]);
+        build_table(metadata_selectedID[0]);
         build_barchart(samples_selectedID[0]);
         build_bubblechart(samples_selectedID[0]);
-        build_gaugechart(filtered_metadata[0], avg_washes);
-
-    })
-
-
-    // run this when page finishes loading
-
-    // get value of the test subject ID node. 
-    let selected_id = dataset_selection_control.node().value;
-
-    // in the JSON, selected_id is stored as an int, so we must parseInt on it for the filter
-    let metadata_selectedID = metadata.filter(m => {
-        return m.id === +selected_id;
-    })
-
-    // in the JSON, selected_id is stored as a string, so we just pass the string value to the filter.
-    let samples_selectedID = samples.filter(s => {
-        return s.id === selected_id;
+        build_gaugechart(metadata_selectedID[0], avg_washes);
     });
+}
 
-    build_table(metadata_selectedID[0]);
-    build_barchart(samples_selectedID[0]);
-    build_bubblechart(samples_selectedID[0]);
-    build_gaugechart(metadata_selectedID[0], avg_washes);
-});
 
+
+// ******** The following functions all build the data displayed on the page
+
+// This function rounds numbers to values in .5 increments
+function roundToHalfNumber(num) {
+    return Math.round(num * 2) / 2;
+}
 
 
 function build_table(metadata_obj) {
@@ -96,6 +86,14 @@ function build_table(metadata_obj) {
         trow.append("td").text(k[1]);
     });
 };
+
+
+// default font styles for chart headers
+const font_title_style = {
+    family: 'Arial',
+    size: 14,
+    color: "black"
+}
 
 function build_barchart(samples_id) {
 
