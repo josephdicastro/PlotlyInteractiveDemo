@@ -116,7 +116,7 @@ function build_barchart(samples_id) {
     };
 
     let layout = {
-        title: "Top 10 OTUs for Selected Subject",
+        title: "Top 10 OTUs for Selected Subject<br>(OTU = Operational Taxonomic Unit)",
         font: font_title_style
     };
 
